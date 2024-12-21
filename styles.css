@@ -1,0 +1,141 @@
+/* Basic CSS styles for the website */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background-color: #f4f4f9;
+    color: #333;
+    display: flex;
+    height: 100vh;
+}
+
+.container {
+    display: flex;
+    width: 100%;
+}
+
+.sidebar {
+    width: 250px; /* Width of the sidebar */
+    background-color: #333;
+    color: white;
+    padding: 20px;
+    height: 100vh; /* Make sidebar full height of the screen */
+    position: fixed; /* Keeps the sidebar fixed */
+}
+
+.sidebar h2 {
+    color: white;
+    margin-bottom: 20px;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar ul li {
+    margin: 10px 0;
+}
+
+.sidebar ul li a {
+    color: white;
+    text-decoration: none;
+    font-size: 1rem;
+}
+
+.sidebar ul li a:hover {
+    color: #4CAF50;
+}
+
+.main-content {
+    margin-left: 250px; /* Offset main content by the width of the sidebar */
+    padding: 20px;
+    width: 100%;
+    overflow: auto;
+}
+
+header {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 0;
+    text-align: center;
+}
+
+header h1 {
+    font-size: 2rem;
+}
+
+main {
+    padding: 20px;
+}
+
+h2, h3 {
+    color: #333;
+}
+
+label {
+    font-size: 1rem;
+    margin-right: 10px;
+}
+
+select, button {
+    padding: 8px;
+    font-size: 1rem;
+    margin-top: 10px;
+}
+
+button {
+    cursor: pointer;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    margin-top: 10px;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 10px 0;
+}
+
+.right-aligned {
+	text-align: right;
+	margin-right: 40%;
+}
+.left-aligned {
+	margin-left: 5%;
+}
+.the-content {
+	display: flex;
+	height:90%;
+	flex-direction: column;
+}
+.conversation-container {
+	height: 95%;
+	overflow: scroll;
+    overflow-x: hidden;
+	scrollbar-width: none;
+}
+.bottom-input {
+	margin-top: auto;
+	width: 100%;
+}
+
+.input-container {
+	text-align: center;
+	width: 40%;
+}
