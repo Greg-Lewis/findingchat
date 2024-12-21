@@ -1488,7 +1488,7 @@ function respond() {
 		var response = document.createElement('div');
 	    const randomIndex = Math.floor(Math.random() * arr.length);
         const randomRespose = arr[randomIndex];
-		response.textContent = "Nemo: " + randomRespose;
+		response.textContent = randomRespose;
 		response.classList.add("left-aligned");
 		output.appendChild(response);
 		output.scrollTop = output.scrollHeight;
