@@ -1,7 +1,4 @@
-function respond() {
-	const input = document.getElementById('input');
-    const output = document.getElementById('conversation-container');
-	
+
 	let arr = ["Wow.",
 "Mmm.",
 "Wow.",
@@ -1440,21 +1437,102 @@ function respond() {
 "Oooh--aaaaah!",
 "Yay! We did it! Ha ha ha ha ha!",
 "Now what?"];
+function respond() {
+	const input = document.getElementById('input');
+    const output = document.getElementById('conversation-container');
+	
 	if(input.value) {
+		let randomIndex = Math.floor(Math.random() * arr.length);
+        let randomResponse = arr[randomIndex];
+		if(input.value.toLowerCase() == 'hi' || input.value.toLowerCase().includes('hi ') || input.value.toLowerCase().includes('hello')) {
+			let arr2 = [];
+			for(s of arr) {
+				if(s.toLowerCase().includes('hello') || s.toLowerCase().includes('hi ')) {
+					arr2.push(s);
+				}
+			}
+			if(arr2.length > 0){
+				randomIndex = Math.floor(Math.random() * arr2.length);
+				randomResponse = arr2[randomIndex];
+			}
+		}
+		if (input.value.toLowerCase().includes('life')) {
+			let arr2 = [];
+			for(s of arr) {
+				if(s.toLowerCase().includes('42')) {
+				arr2.push(s);
+				}
+			}
+			if(arr2.length > 0){
+				randomIndex = Math.floor(Math.random() * arr2.length);
+				randomResponse = arr2[randomIndex];
+			}
+		}
+		
+		if (input.value.toLowerCase().includes('bye')) {
+			let arr2 = [];
+			for(s of arr) {
+				if(s.toLowerCase().includes('bye')) {
+				arr2.push(s);
+				}
+			}
+			if(arr2.length > 0){
+				randomIndex = Math.floor(Math.random() * arr2.length);
+				randomResponse = arr2[randomIndex];
+			}
+		}
+		
+		if (input.value.toLowerCase().includes('love')) {
+			let arr2 = [];
+			for(s of arr) {
+				if(s.toLowerCase().includes('love')) {
+				arr2.push(s);
+				}
+			}
+			if(arr2.length > 0){
+				randomIndex = Math.floor(Math.random() * arr2.length);
+				randomResponse = arr2[randomIndex];
+			}
+		}
+		if (input.value.toLowerCase().includes('joke')) {
+			let arr2 = [];
+			for(s of arr) {
+				if(s.toLowerCase().includes('mollusk') && s.toLowerCase().includes('joke')) {
+				arr2.push(s);
+				}
+			}
+			if(arr2.length > 0){
+				randomIndex = Math.floor(Math.random() * arr2.length);
+				randomResponse = arr2[randomIndex];
+			}
+		}
+		if (input.value.toLowerCase().includes('think')) {
+			let arr2 = [];
+			for(s of arr) {
+				if(s.toLowerCase().includes('think')) {
+				arr2.push(s);
+				}
+			}
+			if(arr2.length > 0){
+				randomIndex = Math.floor(Math.random() * arr2.length);
+				randomResponse = arr2[randomIndex];
+			}
+		}
 		var inputDoc = document.createElement('div');
 		inputDoc.textContent = "You: " + input.value;
 		inputDoc.classList.add("right-aligned");
 		output.appendChild(inputDoc);
 		var response = document.createElement('div');
-	    const randomIndex = Math.floor(Math.random() * arr.length);
-        const randomRespose = arr[randomIndex];
-		response.textContent = randomRespose;
+		response.textContent = randomResponse;
 		response.classList.add("left-aligned");
 		output.appendChild(response);
 		output.scrollTop = output.scrollHeight;
 		input.value = '';
+		var storage = arr.indexOf(randomResponse); 
+		if (storage != -1) {
+			arr.splice(storage, 1);
+		}
 	}
 
 
 }
-
