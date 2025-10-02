@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SOX Audit — SVG Platformer</title>
+  <style>
+    html, body { height:100%; margin:0; background:#0b0f14; color:#e9f1ff; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
+    svg { width:100%; height:100%; display:block; touch-action:none; user-select:none; }
+    .hidden { display:none; }
+  </style>
+</head>
+<body>
+  <!-- Everything visual is SVG -->
+  <svg id="game" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg" aria-label="SOX Audit game">
+    <defs>
+      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#0d1420"/>
+        <stop offset="100%" stop-color="#0b0f14"/>
+      </linearGradient>
+      <linearGradient id="platGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#1c2634"/>
+        <stop offset="100%" stop-color="#111823"/>
+      </linearGradient>
+      <radialGradient id="evidenceGlow" cx="50%" cy="50%" r="0.9">
+        <stop offset="0%" stop-color="#b1ffb9" stop-opacity="1"/>
+        <stop offset="100%" stop-color="#b1ffb9" stop-opacity="0"/>
+      </radialGradient>
+      <filter id="shadow" x="-40%" y="-40%" width="180%" height="180%">
+        <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000" flood-opacity="0.45"/>
+      </filter>
+    </defs>
+
+    <!-- Background (camera-independent sky) -->
+    <rect x="0" y="0" width="1600" height="900" fill="url(#sky)"/>
+
+    <!-- World that scrolls -->
+    <g id="cam">
+      <!-- Parallax city -->
+      <g id="parallax" opacity="0.25">
+        <rect id="parallaxSky" x="0" y="700" width="5000" height="200" fill="#0a121b"/>
+        <g id="farCity" fill="#0e1822"></g>
+      </g>
+      <!-- Level content -->
+      <g id="plats"></g>
+      <g id="items"></g>
+      <g id="hazards"></g>
+      <g id="exit"></g>
+      <!-- Player (SOX shield) -->
+      <g id="player" filter="url(#shadow)">
+        <g id="avatar">
+          <path id="shield" d="M 0 -36 L 28 -26 L 24 18 Q 0 38 -24 18 L -28 -26 Z" fill="#69d2a7" stroke="#3aa37d" stroke-width="4"/>
+          <text x="0" y="0" text-anchor="middle" font-size="18" font-weight="900" fill="#0b0f14">SOX</text>
+        </g>
+      </g>
+    </g>
+
+    <!-- HUD (fixed) -->
+    <g id="hud" font-weight="700" font-family="system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial">
+      <g id="hudPills">
+        <g id="pillNW">
+          <rect x="16" y="16" rx="12" ry="12" width="360" height="56" fill="#101822" stroke="#1e2a3a"/>
+          <text id="tLevel" x="36" y="52" font-size="22" fill="#bcdcff">Level 1</text>
+          <text id="tEvidence" x="160" y="52" font-size="22" fill="#b1ffb9">0/0 📁</text>
+        </g>
+        <g id="pillLives">
+          <rect x="390" y="16" rx="12" ry="12" width="160" height="56" fill="#101822" stroke="#1e2a3a"/>
+          <text id="tLives" x="410" y="52" font-size="22" fill="#ffd54a">❤️ x3</text>
+        </g>
+        <g id="pillHint">
+          <rect x="560" y="16" rx="12" ry="12" width="420" height="56" fill="#101822" stroke="#1e2a3a"/>
+          <text id="tHint" x="580" y="52" font-size="20" fill="#9fb2c9">←/→ to move · Space to jump</text>
+        </g>
+      </g>
+      <!-- Progress bar -->
+      <rect x="16" y="84" width="1568" height="12" rx="6" fill="#12202f" stroke="#1f2f44"/>
+      <rect id="prog" x="16" y="84" width="0" height="12" rx="6" fill="#69d2a7"/>
+    </g>
+
+    <!-- Panels (SVG UI) -->
+    <g id="panelMask" class="hidden">
+      <rect x="0" y="0" width="1600" height="900" fill="#000" opacity="0.65"/>
+    </g>
+
+    <g id="menuPanel">
+      <rect x="300" y="180" width="1000" height="520" rx="24" fill="#101822" stroke="#203043"/>
+      <text x="800" y="260" text-anchor="middle" font-size="48" font-weight="900" fill="#e9f1ff">🧪 SOX Audit</text>
+      <text x="800" y="308" text-anchor="middle" font-size="22" fill="#9fb2c9">Survive a Sarbanes‑Oxley audit of a lab system. Collect evidence, avoid findings, reach the exit.</text>
+      <text x="800" y="342" text-anchor="middle" font-size="18" fill="#81a3c7">Randomly generated, SVG‑only, level‑based platformer.</text>
+
+      <g id="btnStart" cursor="pointer">
+        <rect x="560" y="380" width="480" height="70" rx="16" fill="#2c7a5f" stroke="#3aa37d"/>
+        <text x="800" y="426" text-anchor="middle" font-size="28" font-weight="800" fill="#0b0f14">▶ Start Audit</text>
+      </g>
+
+      <g id="rowOpts">
+        <text x="540" y="480" font-size="18" fill="#9fb2c9">Level length</text>
+        <g id="optShort" cursor="pointer">
+          <rect x="540" y="492" width="190" height="56" rx="12" fill="#121a24" stroke="#283a52"/>
+          <text x="635" y="528" text-anchor="middle" font-size="20" fill="#cfe7ff">Short</text>
+        </g>
+        <g id="optNormal" cursor="pointer">
+          <rect x="740" y="492" width="190" height="56" rx="12" fill="#121a24" stroke="#283a52"/>
+          <text x="835" y="528" text-anchor="middle" font-size="20" fill="#cfe7ff">Normal</text>
+        </g>
+        <g id="optLong" cursor="pointer">
+          <rect x="940" y="492" width="190" height="56" rx="12" fill="#121a24" stroke="#283a52"/>
+          <text x="1035" y="528" text-anchor="middle" font-size="20" fill="#cfe7ff">Long</text>
+        </g>
+      </g>
+    </g>
+
+    <g id="betweenPanel" class="hidden">
+      <rect x="400" y="240" width="800" height="420" rx="24" fill="#101822" stroke="#203043"/>
+      <text x="800" y="300" text-anchor="middle" font-size="40" font-weight="900" fill="#e9f1ff">Level <tspan id="blv">1</tspan> Passed</text>
+      <text x="800" y="340" text-anchor="middle" font-size="20" fill="#9fb2c9">Evidence: <tspan id="blev">0</tspan> · Lives left: <tspan id="blli">3</tspan></text>
+      <g id="btnNext" cursor="pointer">
+        <rect x="600" y="380" width="400" height="70" rx="16" fill="#2c7a5f" stroke="#3aa37d"/>
+        <text x="800" y="426" text-anchor="middle" font-size="28" font-weight="800" fill="#0b0f14">➡ Next Audit Area</text>
+      </g>
+    </g>
+
+    <g id="gameOverPanel" class="hidden">
+      <rect x="400" y="240" width="800" height="420" rx="24" fill="#101822" stroke="#203043"/>
+      <text x="800" y="300" text-anchor="middle" font-size="40" font-weight="900" fill="#ffd54a">Audit Failed</text>
+      <text x="800" y="340" text-anchor="middle" font-size="20" fill="#9fb2c9">Material weakness detected. Try again.</text>
+      <g id="btnRestart" cursor="pointer">
+        <rect x="600" y="380" width="400" height="70" rx="16" fill="#2c7a5f" stroke="#3aa37d"/>
+        <text x="800" y="426" text-anchor="middle" font-size="28" font-weight="800" fill="#0b0f14">🔄 Restart</text>
+      </g>
+    </g>
+
+    <!-- Touch controls (SVG) -->
+    <g id="touch" opacity="0.85">
+      <g id="btnLeft" cursor="pointer">
+        <circle cx="130" cy="800" r="70" fill="#121a24" stroke="#1f2f44"/>
+        <text x="130" y="808" text-anchor="middle" font-size="44" fill="#cfe7ff">◀</text>
+      </g>
+      <g id="btnRight" cursor="pointer">
+        <circle cx="260" cy="800" r="70" fill="#121a24" stroke="#1f2f44"/>
+        <text x="260" y="808" text-anchor="middle" font-size="44" fill="#cfe7ff">▶</text>
+      </g>
+      <g id="btnJump" cursor="pointer">
+        <circle cx="1460" cy="800" r="78" fill="#121a24" stroke="#1f2f44"/>
+        <text x="1460" y="808" text-anchor="middle" font-size="44" fill="#cfe7ff">⤒</text>
+      </g>
+    </g>
+  </svg>
+
+  <script>
+  (function(){
+    const svg = document.getElementById('game');
+    const cam = document.getElementById('cam');
+    const platsG = document.getElementById('plats');
+    const itemsG = document.getElementById('items');
+    const hazardsG = document.getElementById('hazards');
+    const exitG = document.getElementById('exit');
+    const playerG = document.getElementById('player');
+
+    const farCity = document.getElementById('farCity');
+
+    const tLevel = document.getElementById('tLevel');
+    const tEvidence = document.getElementById('tEvidence');
+    const tLives = document.getElementById('tLives');
+    const tHint = document.getElementById('tHint');
+    const prog = document.getElementById('prog');
+
+    const panelMask = document.getElementById('panelMask');
+    const menuPanel = document.getElementById('menuPanel');
+    const betweenPanel = document.getElementById('betweenPanel');
+    const gameOverPanel = document.getElementById('gameOverPanel');
+
+    const btnStart = document.getElementById('btnStart');
+    const btnNext = document.getElementById('btnNext');
+    const btnRestart = document.getElementById('btnRestart');
+
+    const optShort = document.getElementById('optShort');
+    const optNormal = document.getElementById('optNormal');
+    const optLong = document.getElementById('optLong');
+
+    const blv = document.getElementById('blv');
+    const blev = document.getElementById('blev');
+    const blli = document.getElementById('blli');
+
+    const btnLeft = document.getElementById('btnLeft');
+    const btnRight = document.getElementById('btnRight');
+    const btnJump = document.getElementById('btnJump');
+
+    const world = {
+      viewW: 1600, viewH: 900,
+      width: 3600, height: 900,
+      level: 1,
+      state: 'MENU', // MENU, PLAYING, BETWEEN, OVER
+      lives: 3,
+      evidenceReq: 4,
+      evidenceGet: 0,
+      player: { x: 80, y: 760, w: 48, h: 64, vx: 0, vy: 0, onGround: false },
+      camX: 0,
+      speed: 520,
+      gravity: 2200,
+      jumpVel: -980,
+      friction: 0.86,
+      moveLeft: false,
+      moveRight: false,
+      jumpPressed: false,
+      coyote: 0, // coyote time seconds
+      jumpBuffer: 0, // buffer seconds
+      levelTime: 25,
+      levelTimeLeft: 25,
+      seed: 1,
+      rng: Math.random,
+    };
+
+    // Seeded RNG so each level is reproducible by number
+    function makeRNG(seed){
+      let s = seed >>> 0;
+      return function(){
+        s = (s * 1664525 + 1013904223) >>> 0;
+        return (s >>> 0) / 4294967296;
+      }
+    }
+
+    // Helper
+    function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+
+    // Simple AABB
+    function intersects(a,b){ return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y; }
+
+    // UI helpers (SVG "buttons")
+    function makeButton(g, handler){
+      g.addEventListener('pointerdown', (e)=>{ e.preventDefault(); handler(); });
+      g.addEventListener('touchstart', (e)=>{ e.preventDefault(); handler(); });
+    }
+    makeButton(btnStart, ()=> startGame());
+    makeButton(btnNext, ()=> nextLevel());
+    makeButton(btnRestart, ()=> restart());
+
+    // Option toggles for level length
+    let levelLenMode = 'short';
+    function setOptStyles(){
+      function setActive(el, active){
+        const rect = el.querySelector('rect');
+        rect.setAttribute('fill', active ? '#2c7a5f' : '#121a24');
+        rect.setAttribute('stroke', active ? '#3aa37d' : '#283a52');
+      }
+      setActive(optShort, levelLenMode==='short');
+      setActive(optNormal, levelLenMode==='normal');
+      setActive(optLong, levelLenMode==='long');
+    }
+    makeButton(optShort, ()=>{ levelLenMode='short'; setOptStyles(); });
+    makeButton(optNormal, ()=>{ levelLenMode='normal'; setOptStyles(); });
+    makeButton(optLong, ()=>{ levelLenMode='long'; setOptStyles(); });
+    setOptStyles();
+
+    // Touch controls
+    function holdControl(el, setter){
+      let active = false;
+      const onDown = (e)=>{ e.preventDefault(); active=true; setter(true); };
+      const onUp = (e)=>{ e.preventDefault(); active=false; setter(false); };
+      el.addEventListener('pointerdown', onDown);
+      window.addEventListener('pointerup', onUp);
+      el.addEventListener('touchstart', onDown, {passive:false});
+      window.addEventListener('touchend', onUp);
+      window.addEventListener('touchcancel', onUp);
+    }
+    holdControl(btnLeft, (v)=> world.moveLeft = v);
+    holdControl(btnRight, (v)=> world.moveRight = v);
+    makeButton(btnJump, ()=>{ world.jumpPressed = true; world.jumpBuffer = 0.16; });
+
+    // Keyboard
+    window.addEventListener('keydown', (e)=>{
+      const k = e.key.toLowerCase();
+      if (k==='arrowleft' || k==='a') world.moveLeft = true;
+      if (k==='arrowright' || k==='d') world.moveRight = true;
+      if (k===' ' || k==='arrowup' || k==='w') { world.jumpPressed = true; world.jumpBuffer = 0.16; }
+      if (k==='p') togglePause();
+    });
+    window.addEventListener('keyup', (e)=>{
+      const k = e.key.toLowerCase();
+      if (k==='arrowleft' || k==='a') world.moveLeft = false;
+      if (k==='arrowright' || k==='d') world.moveRight = false;
+    });
+
+    // Panels
+    function showMenu(){ world.state='MENU'; panelMask.classList.remove('hidden'); menuPanel.classList.remove('hidden'); betweenPanel.classList.add('hidden'); gameOverPanel.classList.add('hidden'); }
+    function showBetween(){ world.state='BETWEEN'; panelMask.classList.remove('hidden'); menuPanel.classList.add('hidden'); betweenPanel.classList.remove('hidden'); gameOverPanel.classList.add('hidden'); }
+    function showGameOver(){ world.state='OVER'; panelMask.classList.remove('hidden'); menuPanel.classList.add('hidden'); betweenPanel.classList.add('hidden'); gameOverPanel.classList.remove('hidden'); }
+    function hidePanels(){ panelMask.classList.add('hidden'); menuPanel.classList.add('hidden'); betweenPanel.classList.add('hidden'); gameOverPanel.classList.add('hidden'); }
+
+    // Level generation
+    const platforms = []; // {x,y,w,h}
+    const evidences = []; // {x,y,r,el}
+    const hazards = [];   // {x,y,w,h,type,dx,amp,speed,el}
+    let exitDoor = null;  // {x,y,w,h,locked,el}
+
+    function clearLevel(){
+      platforms.length = 0; evidences.length = 0; hazards.length = 0; exitDoor = null;
+      platsG.replaceChildren(); itemsG.replaceChildren(); hazardsG.replaceChildren(); exitG.replaceChildren();
+      farCity.replaceChildren();
+    }
+
+    function addPlatform(x,y,w,h=18){
+      const r = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      r.setAttribute('x',x); r.setAttribute('y',y); r.setAttribute('width',w); r.setAttribute('height',h);
+      r.setAttribute('fill','url(#platGrad)'); r.setAttribute('stroke','#1e2a30');
+      platsG.appendChild(r);
+      const p = {x,y,w,h, el:r}; platforms.push(p); return p;
+    }
+
+    function addEvidence(x,y){
+      const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+      const glow = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      glow.setAttribute('cx',x); glow.setAttribute('cy',y); glow.setAttribute('r',26); glow.setAttribute('fill','url(#evidenceGlow)'); glow.setAttribute('opacity','0.35');
+      const folder = document.createElementNS('http://www.w3.org/2000/svg','path');
+      folder.setAttribute('d',`M ${x-16} ${y-12} h 12 l 6 -6 h 14 a 4 4 0 0 1 4 4 v 24 a 4 4 0 0 1 -4 4 h -32 a 4 4 0 0 1 -4 -4 v -18 a 4 4 0 0 1 4 -4 z`);
+      folder.setAttribute('fill','#b1ffb9'); folder.setAttribute('stroke','#6fd189'); folder.setAttribute('stroke-width','2');
+      const paper = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      paper.setAttribute('x',x-6); paper.setAttribute('y',y-4); paper.setAttribute('width',14); paper.setAttribute('height',16); paper.setAttribute('fill','#e9fff0'); paper.setAttribute('rx','2');
+      const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+      t.textContent = 'E'; t.setAttribute('x',x+10); t.setAttribute('y',y+6); t.setAttribute('font-size','14'); t.setAttribute('font-weight','900'); t.setAttribute('fill','#0b0f14');
+      g.append(glow, folder, paper, t); itemsG.appendChild(g);
+      const e = {x:x-14, y:y-22, w:28, h:28, el:g}; evidences.push(e); return e;
+    }
+
+    function addHazard(x,y,type='spike',move=false){
+      const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+      let bb={x,y,w:28,h:28};
+      if (type==='spike'){
+        const poly = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+        const pts = [];
+        const r=18, cx=x+14, cy=y+14; const spikes=6;
+        for(let i=0;i<spikes;i++){ const a=i/spikes*Math.PI*2; const rr = i%2? r*0.5 : r; pts.push((cx+Math.cos(a)*rr)+","+(cy+Math.sin(a)*rr)); }
+        poly.setAttribute('points', pts.join(' '));
+        poly.setAttribute('fill','#ff5a67'); poly.setAttribute('stroke','#cc2f3b'); poly.setAttribute('stroke-width','3');
+        g.appendChild(poly);
+      } else {
+        const rct = document.createElementNS('http://www.w3.org/2000/svg','rect');
+        rct.setAttribute('x',x); rct.setAttribute('y',y); rct.setAttribute('width',28); rct.setAttribute('height',28);
+        rct.setAttribute('fill','#ff5a67'); rct.setAttribute('stroke','#cc2f3b'); rct.setAttribute('rx','6');
+        const tx = document.createElementNS('http://www.w3.org/2000/svg','text'); tx.textContent='!'; tx.setAttribute('x',x+14); tx.setAttribute('y',y+20); tx.setAttribute('text-anchor','middle'); tx.setAttribute('font-weight','900'); tx.setAttribute('fill','#0b0f14');
+        g.append(rct, tx);
+      }
+      hazardsG.appendChild(g);
+      const h = {x, y, w:28, h:28, type, move, dx:0, amp: move ? 60 : 0, speed: move ? (60 + world.rng()*60) : 0, el:g}; hazards.push(h); return h;
+    }
+
+    function addExit(x,y){
+      const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+      const w=60,h=90; const doorX=x, doorY=y-h;
+      const body = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      body.setAttribute('x',doorX); body.setAttribute('y',doorY); body.setAttribute('width',w); body.setAttribute('height',h);
+      body.setAttribute('fill','#203448'); body.setAttribute('stroke','#2e4a66'); body.setAttribute('rx','8');
+      const lock = document.createElementNS('http://www.w3.org/2000/svg','circle'); lock.setAttribute('cx',doorX+w/2); lock.setAttribute('cy',doorY+h/2); lock.setAttribute('r',10); lock.setAttribute('fill','#ffd54a'); lock.setAttribute('stroke','#caa133');
+      const tag = document.createElementNS('http://www.w3.org/2000/svg','text'); tag.textContent = 'EXIT'; tag.setAttribute('x',doorX+w/2); tag.setAttribute('y',doorY-10); tag.setAttribute('text-anchor','middle'); tag.setAttribute('font-size','16'); tag.setAttribute('fill','#cfe7ff');
+      g.append(body, lock, tag); exitG.appendChild(g);
+      exitDoor = {x:doorX, y:doorY, w, h, locked:true, el:g, lockEl:lock};
+    }
+
+    function genParallax(){
+      const rng = world.rng;
+      for (let i=0;i<40;i++){
+        const bx = i*130 + (rng()*80);
+        const by = 560 + rng()*80;
+        const bw = 80 + rng()*120;
+        const bh = 260 + rng()*180;
+        const b = document.createElementNS('http://www.w3.org/2000/svg','rect');
+        b.setAttribute('x',bx); b.setAttribute('y',900-bh); b.setAttribute('width',bw); b.setAttribute('height',bh);
+        b.setAttribute('fill','#0e1822');
+        farCity.appendChild(b);
+      }
+    }
+
+    function generateLevel(){
+      clearLevel();
+      world.width = 3200 + world.level*160; // grows slowly
+      world.evidenceReq = Math.min(6, 3 + Math.floor(world.level*0.6));
+      world.evidenceGet = 0;
+      world.lives = 3;
+      world.levelTime = levelLenMode==='short' ? 18 : levelLenMode==='normal' ? 26 : 36;
+      world.levelTimeLeft = world.levelTime;
+      world.seed = 1733*world.level + 7;
+      world.rng = makeRNG(world.seed);
+      genParallax();
+
+      // Start, mid, end platforms
+      addPlatform(40, 820, 320, 22);
+      const endX = world.width - 340; const endY = 720 + (world.rng()*120-60);
+      addPlatform(endX-120, endY, 320, 22);
+      addExit(endX+24, endY);
+
+      // Chain platforms across the level
+      let px = 320, py = 760;
+      while (px < endX - 200){
+        const stepX = 220 + world.rng()*360;
+        let ny = py + (world.rng()*260 - 130);
+        ny = clamp(ny, 360, 840);
+        const w = 160 + world.rng()*220;
+        const nx = px + stepX;
+        const p = addPlatform(nx, ny, w, 20);
+        // evidence 50% chance
+        if (world.rng() < 0.55) addEvidence(nx + w*0.5, ny - 26);
+        // hazard in gap 40% chance
+        if (world.rng() < 0.45){
+          const hx = nx - 80 + world.rng()* (w+120);
+          const hy = Math.min(ny, py) - 14 - (world.rng()*40);
+          addHazard(hx, hy, 'spike', world.rng()<0.6);
+        }
+        px = nx; py = ny;
+      }
+
+      // Ensure enough evidence: sprinkle more if short
+      while (evidences.length < world.evidenceReq){
+        const p = platforms[ 1 + Math.floor(world.rng()*(platforms.length-2)) ];
+        addEvidence(p.x + p.w*0.5, p.y - 26);
+      }
+
+      // Reset player
+      world.player.x = 80; world.player.y = 760 - world.player.h; world.player.vx = 0; world.player.vy = 0; world.player.onGround = false;
+      updateHUD();
+    }
+
+    // HUD updates
+    function updateHUD(){
+      tLevel.textContent = 'Level ' + world.level;
+      tEvidence.textContent = `${world.evidenceGet}/${world.evidenceReq} 📁`;
+      tLives.textContent = `❤️ x${world.lives}`;
+      // progress approximates player x across level width
+      const p = clamp((world.player.x + world.player.w/2) / world.width, 0, 1);
+      prog.setAttribute('width', String(1568 * p));
+      if (world.evidenceGet >= world.evidenceReq && exitDoor && exitDoor.locked){
+        exitDoor.locked = false; exitDoor.lockEl.setAttribute('fill','#69d2a7'); exitDoor.lockEl.setAttribute('stroke','#3aa37d');
+      }
+    }
+
+    // Gameplay
+    function startGame(){ hidePanels(); world.level=1; generateLevel(); world.state='PLAYING'; }
+    function nextLevel(){ hidePanels(); world.level++; generateLevel(); world.state='PLAYING'; }
+    function restart(){ hidePanels(); world.level=1; generateLevel(); world.state='PLAYING'; }
+
+    function togglePause(){
+      if (world.state==='PLAYING'){ world.state='MENU'; panelMask.classList.remove('hidden'); menuPanel.classList.remove('hidden'); tHint.textContent='Paused — press P to resume'; }
+      else if (world.state==='MENU'){ hidePanels(); world.state='PLAYING'; tHint.textContent='←/→ to move · Space to jump'; }
+    }
+
+    // Main loop
+    let last = performance.now();
+    function loop(now){
+      const dt = Math.min(0.032, (now - last)/1000); last = now;
+      if (world.state==='PLAYING') step(dt);
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+
+    function step(dt){
+      // Timers
+      world.levelTimeLeft -= dt; if (world.levelTimeLeft <= 0){ showGameOver(); return; }
+
+      // Input → velocity
+      const p = world.player; const accel = 2200;
+      if (world.moveLeft) p.vx -= accel*dt;
+      if (world.moveRight) p.vx += accel*dt;
+      // Clamp horizontal speed
+      p.vx = clamp(p.vx, -world.speed, world.speed);
+      // Friction when no input
+      if (!world.moveLeft && !world.moveRight) p.vx *= world.friction;
+
+      // Gravity
+      p.vy += world.gravity*dt;
+
+      // Coyote & jump buffer
+      world.coyote = p.onGround ? 0.12 : Math.max(0, world.coyote - dt);
+      if (world.jumpBuffer > 0) world.jumpBuffer -= dt;
+      if (world.jumpBuffer > 0 && world.coyote > 0){
+        p.vy = world.jumpVel; p.onGround = false; world.jumpBuffer = 0; // consume
+      }
+
+      // Move X then resolve
+      p.x += p.vx*dt;
+      resolveCollisionsX(p, platforms);
+      // Move Y then resolve
+      p.y += p.vy*dt; p.onGround = false;
+      resolveCollisionsY(p, platforms);
+
+      // Keep in world bounds
+      if (p.x < 0){ p.x=0; p.vx=0; }
+      if (p.x + p.w > world.width){ p.x = world.width - p.w; p.vx = 0; }
+      if (p.y > world.height){ death(); return; }
+
+      // Camera follow
+      world.camX = clamp((p.x + p.w/2) - world.viewW/2, 0, world.width - world.viewW);
+      cam.setAttribute('transform', `translate(${-world.camX} 0)`);
+      // Parallax (scroll slower)
+      document.getElementById('parallax').setAttribute('transform', `translate(${-world.camX*0.35} 0)`);
+
+      // Update player SVG
+      const px = p.x + p.w/2; const py = p.y + p.h/2;
+      playerG.setAttribute('transform', `translate(${px} ${py})`);
+      // tilt a bit with velocity
+      const rot = clamp(p.vx/world.speed, -1, 1)*10;
+      playerG.querySelector('#avatar').setAttribute('transform', `rotate(${rot})`);
+
+      // Evidence collection
+      for (let i=evidences.length-1; i>=0; i--){ const e = evidences[i]; if (intersects(p,e)){ e.el.remove(); evidences.splice(i,1); world.evidenceGet++; pulseHUD(); updateHUD(); } }
+
+      // Hazards (motion + collision)
+      hazards.forEach(h=>{
+        if (h.move){
+          h.dx += h.speed*dt; const off = Math.sin(h.dx*0.03)*h.amp;
+          h.el.setAttribute('transform', `translate(${off} 0)`);
+        }
+        const hb = {x: h.x + (h.move? Math.sin(h.dx*0.03)*h.amp : 0), y:h.y, w:h.w, h:h.h};
+        if (intersects(p, hb)) { hitHazard(); }
+      });
+
+      // Exit
+      if (exitDoor){
+        const ex = exitDoor; if (!ex.locked){ if (intersects(p, ex)){ // small inset
+            blv.textContent = world.level; blev.textContent = world.evidenceGet; blli.textContent = world.lives;
+            showBetween();
+          }
+        }
+      }
+
+      updateHUD();
+    }
+
+    function resolveCollisionsX(p, list){
+      for (const r of list){ if (intersects(p, r)){
+        if (p.vx > 0) p.x = r.x - p.w; else if (p.vx < 0) p.x = r.x + r.w; p.vx = 0;
+      }}
+    }
+    function resolveCollisionsY(p, list){
+      for (const r of list){ if (intersects(p, r)){
+        if (p.vy > 0){ p.y = r.y - p.h; p.vy = 0; p.onGround = true; }
+        else if (p.vy < 0){ p.y = r.y + r.h; p.vy = 0; }
+      }}
+    }
+
+    function pulseHUD(){
+      tEvidence.setAttribute('fill', '#69d2a7');
+      setTimeout(()=> tEvidence.setAttribute('fill','#b1ffb9'), 120);
+    }
+
+    function hitHazard(){
+      if (world.state!=='PLAYING') return;
+      world.lives -= 1; updateHUD();
+      flashText('FINDING! -1 life', '#ffb3ba');
+      // respawn at start
+      world.player.x = 80; world.player.y = 760 - world.player.h; world.player.vx = 0; world.player.vy = 0; world.player.onGround=false;
+      if (world.lives <= 0){ showGameOver(); }
+    }
+
+    function death(){
+      world.lives -= 1; updateHUD();
+      flashText('You fell!', '#ffb3ba');
+      world.player.x = 80; world.player.y = 760 - world.player.h; world.player.vx = 0; world.player.vy = 0;
+      if (world.lives <= 0){ showGameOver(); }
+    }
+
+    function flashText(txt, color){
+      const g = document.createElementNS('http://www.w3.org/2000/svg','text');
+      g.textContent = txt; g.setAttribute('x', world.viewW/2); g.setAttribute('y', 160);
+      g.setAttribute('text-anchor','middle'); g.setAttribute('font-size','28'); g.setAttribute('font-weight','900'); g.setAttribute('fill', color);
+      svg.appendChild(g); let t=0; (function anim(){ t+=1/60; g.setAttribute('opacity', String(1-t)); g.setAttribute('y', String(160 - t*20)); if (t<1) requestAnimationFrame(anim); else g.remove(); })();
+    }
+
+    // Start at menu
+    showMenu();
+  })();
+  </script>
+</body>
+</html>
