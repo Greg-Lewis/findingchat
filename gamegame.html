@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Meta Rich Simulator — Game‑in‑a‑Game (SVG)</title>
+  <style>
+    html, body { height: 100%; margin: 0; background: #0b0f14; color: #e9f1ff; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
+    svg { width: 100%; height: 100%; display: block; user-select: none; touch-action: none; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <!-- Everything visual is SVG -->
+  <svg id="game" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg" aria-label="Meta Rich Simulator">
+    <defs>
+      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#0d1420"/>
+        <stop offset="100%" stop-color="#0b0f14"/>
+      </linearGradient>
+      <linearGradient id="cardGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#121a24"/>
+        <stop offset="100%" stop-color="#0f1620"/>
+      </linearGradient>
+      <linearGradient id="platGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#1c2634"/>
+        <stop offset="100%" stop-color="#111823"/>
+      </linearGradient>
+      <radialGradient id="coinGlow" cx="50%" cy="50%" r="0.9">
+        <stop offset="0%" stop-color="#fff0a8" stop-opacity="1"/>
+        <stop offset="100%" stop-color="#ffd54a" stop-opacity="0"/>
+      </radialGradient>
+      <filter id="shadow" x="-40%" y="-40%" width="180%" height="180%">
+        <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000" flood-opacity="0.45"/>
+      </filter>
+      <clipPath id="innerClip">
+        <rect id="innerClipRect" x="960" y="170" width="580" height="360" rx="12"/>
+      </clipPath>
+    </defs>
+
+    <!-- Background -->
+    <rect x="0" y="0" width="1600" height="900" fill="url(#sky)"/>
+
+    <!-- Desk / dev setup -->
+    <g id="desk">
+      <rect x="0" y="820" width="1600" height="80" fill="#0a121b"/>
+      <!-- Laptop body -->
+      <rect x="920" y="140" width="660" height="440" rx="24" fill="#0f1620" stroke="#1f2f33"/>
+      <rect x="940" y="160" width="620" height="400" rx="18" fill="#0a0f16" stroke="#1a2230"/>
+      <!-- Screen frame label -->
+      <text x="1250" y="152" text-anchor="middle" font-size="14" fill="#7e92ad">Inner Game: Rich Simulator</text>
+    </g>
+
+    <!-- OUTER HUD -->
+    <g id="outerHUD" font-weight="700">
+      <rect x="16" y="16" width="560" height="56" rx="12" fill="#101822" stroke="#1e2a3a"/>
+      <text id="tMoney" x="36" y="52" font-size="22" fill="#bcdcff">Bank: $0</text>
+      <text id="tSprint" x="300" y="52" font-size="22" fill="#ffd54a">Sprint 1</text>
+      <rect x="590" y="16" width="520" height="56" rx="12" fill="#101822" stroke="#1e2a3a"/>
+      <text id="tCapacity" x="610" y="52" font-size="22" fill="#b1ffb9">Capacity: 5 pts</text>
+      <rect x="1120" y="16" width="464" height="56" rx="12" fill="#101822" stroke="#1e2a3a"/>
+      <text id="tHint" x="1140" y="52" font-size="20" fill="#9fb2c9">Select features → Ship build → Play inner level</text>
+    </g>
+
+    <!-- Feature board (outer game) -->
+    <g id="boardTitle">
+      <text x="60" y="150" font-size="24" font-weight="800" fill="#cfe7ff">Feature Board — pick within sprint capacity</text>
+    </g>
+    <g id="featureBoard"></g>
+
+    <!-- Outer buttons -->
+    <g id="outerButtons">
+      <g id="btnShip" cursor="pointer" filter="url(#shadow)">
+        <rect x="60" y="660" width="340" height="70" rx="16" fill="#2c7a5f" stroke="#3aa37d"/>
+        <text x="230" y="706" text-anchor="middle" font-size="28" font-weight="800" fill="#0b0f14">🚀 Build & Ship</text>
+      </g>
+      <g id="btnReroll" cursor="pointer" filter="url(#shadow)">
+        <rect x="420" y="660" width="260" height="70" rx="16" fill="#121a24" stroke="#283a52"/>
+        <text x="550" y="706" text-anchor="middle" font-size="26" font-weight="800" fill="#cfe7ff">🎲 Reroll</text>
+      </g>
+      <g id="btnTestAd" cursor="pointer" filter="url(#shadow)">
+        <rect x="700" y="660" width="260" height="70" rx="16" fill="#121a24" stroke="#283a52"/>
+        <text x="830" y="706" text-anchor="middle" font-size="26" font-weight="800" fill="#cfe7ff">🧪 Test Ad</text>
+      </g>
+    </g>
+
+    <!-- INNER GAME (inside laptop screen) -->
+    <g id="innerRoot" clip-path="url(#innerClip)">
+      <rect x="960" y="170" width="580" height="360" fill="#0a0f16"/>
+      <g id="innerScene"></g>
+      <g id="innerCoins"></g>
+      <g id="innerHazards"></g>
+      <g id="innerEffects"></g>
+      <!-- Player -->
+      <g id="innerPlayer" filter="url(#shadow)"></g>
+      <!-- Inner HUD -->
+      <g id="innerHud" font-weight="700">
+        <text id="innerMoneyText" x="980" y="200" font-size="20" fill="#cfe7ff">$0</text>
+        <text id="innerTimeText" x="1518" y="200" font-size="18" fill="#ffd54a" text-anchor="end">10.0s</text>
+      </g>
+    </g>
+
+    <!-- Panels (SVG) -->
+    <g id="panelMask" class="hidden"><rect x="0" y="0" width="1600" height="900" fill="#000" opacity="0.65"/></g>
+
+    <g id="menuPanel">
+      <rect x="300" y="180" width="1000" height="520" rx="24" fill="#101822" stroke="#203043"/>
+      <text x="800" y="260" text-anchor="middle" font-size="48" font-weight="900" fill="#e9f1ff">🧪 Meta Rich Simulator</text>
+      <text x="800" y="308" text-anchor="middle" font-size="22" fill="#9fb2c9">A game about making a game (that makes you rich). Build features → ship → play the inner Rich Simulator → earn $.</text>
+      <text x="800" y="344" text-anchor="middle" font-size="18" fill="#81a3c7">SVG‑only · Randomized feature sprints · Interstitial hooks</text>
+      <g id="btnStart" cursor="pointer" filter="url(#shadow)">
+        <rect x="560" y="380" width="480" height="70" rx="16" fill="#2c7a5f" stroke="#3aa37d"/>
+        <text x="800" y="426" text-anchor="middle" font-size="28" font-weight="800" fill="#0b0f14">▶ Start</text>
+      </g>
+    </g>
+
+    <g id="betweenInner" class="hidden">
+      <rect x="440" y="230" width="720" height="440" rx="24" fill="#101822" stroke="#203043"/>
+      <text x="800" y="300" text-anchor="middle" font-size="40" font-weight="900" fill="#e9f1ff">Inner Level Complete</text>
+      <text x="800" y="340" text-anchor="middle" font-size="20" fill="#9fb2c9">Earned: <tspan id="biEarned">$0</tspan> · Total Bank: <tspan id="biBank">$0</tspan></text>
+      <g id="btnShowAd" cursor="pointer">
+        <rect x="500" y="380" width="300" height="70" rx="16" fill="#121a24" stroke="#283a52"/>
+        <text x="650" y="426" text-anchor="middle" font-size="26" font-weight="800" fill="#cfe7ff">📺 Show Interstitial</text>
+      </g>
+      <g id="btn2x" cursor="pointer">
+        <rect x="820" y="380" width="300" height="70" rx="16" fill="#ffd54a" stroke="#caa133"/>
+        <text x="970" y="426" text-anchor="middle" font-size="26" font-weight="800" fill="#0b0f14">🎁 2× Bonus (ad)</text>
+      </g>
+      <g id="btnBackDev" cursor="pointer">
+        <rect x="600" y="470" width="400" height="70" rx="16" fill="#2c7a5f" stroke="#3aa37d"/>
+        <text x="800" y="516" text-anchor="middle" font-size="28" font-weight="800" fill="#0b0f14">↩ Back to Dev</text>
+      </g>
+    </g>
+
+    <g id="betweenSprint" class="hidden">
+      <rect x="460" y="270" width="680" height="360" rx="24" fill="#101822" stroke="#203043"/>
+      <text x="800" y="330" text-anchor="middle" font-size="36" font-weight="900" fill="#e9f1ff">Sprint <tspan id="bsSprint">1</tspan> Complete</text>
+      <text x="800" y="370" text-anchor="middle" font-size="20" fill="#9fb2c9">Bank: <tspan id="bsBank">$0</tspan></text>
+      <g id="btnNextSprint" cursor="pointer">
+        <rect x="600" y="410" width="400" height="70" rx="16" fill="#2c7a5f" stroke="#3aa37d"/>
+        <text x="800" y="456" text-anchor="middle" font-size="28" font-weight="800" fill="#0b0f14">➡ Next Sprint</text>
+      </g>
+    </g>
+
+    <g id="gameOverPanel" class="hidden">
+      <rect x="420" y="240" width="760" height="420" rx="24" fill="#101822" stroke="#203043"/>
+      <text x="800" y="300" text-anchor="middle" font-size="40" font-weight="900" fill="#ffd54a">You Made It Kinda™</text>
+      <text x="800" y="340" text-anchor="middle" font-size="20" fill="#9fb2c9">Target reached. Investors satisfied (for now).</text>
+      <g id="btnRestart" cursor="pointer">
+        <rect x="600" y="380" width="400" height="70" rx="16" fill="#2c7a5f" stroke="#3aa37d"/>
+        <text x="800" y="426" text-anchor="middle" font-size="28" font-weight="800" fill="#0b0f14">🔄 Restart</text>
+      </g>
+    </g>
+
+    <!-- Ad overlay (SVG only) -->
+    <g id="adOverlay" class="hidden">
+      <rect x="0" y="0" width="1600" height="900" fill="#000" opacity="0.85"/>
+      <g filter="url(#shadow)">
+        <rect x="320" y="180" width="960" height="540" rx="24" fill="#0c0f14" stroke="#243041"/>
+        <text x="800" y="280" text-anchor="middle" font-size="48" font-weight="900" fill="#e9f1ff">🤑 Ad Placeholder</text>
+        <text x="800" y="320" text-anchor="middle" font-size="18" fill="#9fb2c9">Replace with your ad SDK. Hooks provided (see window.onBetweenInner / onBetweenSprint).</text>
+        <g id="btnCloseAd" cursor="pointer">
+          <rect x="660" y="560" width="280" height="70" rx="16" fill="#121a24" stroke="#283a52"/>
+          <text x="800" y="606" text-anchor="middle" font-size="26" font-weight="800" fill="#cfe7ff">✖ Close</text>
+        </g>
+      </g>
+    </g>
+  </svg>
+
+  <script>
+  (function(){
+    const svg = document.getElementById('game');
+
+    // Groups
+    const featureBoardG = document.getElementById('featureBoard');
+    const tMoney = document.getElementById('tMoney');
+    const tSprint = document.getElementById('tSprint');
+    const tCapacity = document.getElementById('tCapacity');
+    const tHint = document.getElementById('tHint');
+
+    const btnStart = document.getElementById('btnStart');
+    const btnShip = document.getElementById('btnShip');
+    const btnReroll = document.getElementById('btnReroll');
+    const btnTestAd = document.getElementById('btnTestAd');
+
+    const innerScene = document.getElementById('innerScene');
+    const innerPlayerG = document.getElementById('innerPlayer');
+    const innerCoinsG = document.getElementById('innerCoins');
+    const innerHazardsG = document.getElementById('innerHazards');
+    const innerEffectsG = document.getElementById('innerEffects');
+    const innerMoneyText = document.getElementById('innerMoneyText');
+    const innerTimeText = document.getElementById('innerTimeText');
+
+    const menuPanel = document.getElementById('menuPanel');
+    const betweenInner = document.getElementById('betweenInner');
+    const betweenSprint = document.getElementById('betweenSprint');
+    const panelMask = document.getElementById('panelMask');
+    const gameOverPanel = document.getElementById('gameOverPanel');
+
+    const biEarned = document.getElementById('biEarned');
+    const biBank = document.getElementById('biBank');
+    const btnShowAd = document.getElementById('btnShowAd');
+    const btn2x = document.getElementById('btn2x');
+    const btnBackDev = document.getElementById('btnBackDev');
+
+    const bsSprint = document.getElementById('bsSprint');
+    const bsBank = document.getElementById('bsBank');
+    const btnNextSprint = document.getElementById('btnNextSprint');
+    const btnRestart = document.getElementById('btnRestart');
+
+    const adOverlay = document.getElementById('adOverlay');
+    const btnCloseAd = document.getElementById('btnCloseAd');
+
+    // State
+    const world = {
+      state: 'MENU', // MENU | OUTER | INNER | BETWEEN_INNER | BETWEEN_SPRINT | OVER
+      money: 0,
+      target: 250000, // win condition
+      sprint: 1,
+      capacity: 5,
+      features: [], // current sprint features
+      selected: new Set(),
+      // inner config baseline
+      innerCfgBase: { levelTime: 10, coinInterval: 0.18, hazardInterval: 0.5, coinValue: [8, 40], playerR: 42, penalty: 0.2 },
+      innerCfg: null,
+      // inner runtime
+      inner: {
+        rect: {x:960, y:170, w:580, h:360},
+        w: 560, h: 340, // logical space inside padding
+        px: 1240, py: 340, pr: 42, // world coords since SVG is absolute; but we clamp to inner rect
+        inputX: 1240, inputY: 340,
+        coinId: 0, hazardId: 0, coins: new Map(), hazards: new Map(),
+        timeLeft: 10, levelEarnings: 0,
+        spawnCoinT: 0, spawnHazardT: 0
+      },
+      rngSeed: 1, rng: Math.random,
+    };
+
+    function makeRNG(seed){ let s = seed >>> 0; return function(){ s = (s * 1664525 + 1013904223) >>> 0; return (s >>> 0) / 4294967296; } }
+    function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+    function fmtMoney(n){ return '$' + Math.round(n).toLocaleString('en-US'); }
+
+    // Feature catalogue (effects apply to inner config)
+    const catalog = [
+      { key:'core', name:'Core Loop', desc:'Implements coin collecting.', cost:[1,2], apply:(c)=>c },
+      { key:'coins1', name:'Coin Faucet', desc:'More coins appear.', cost:[1,2], apply:(c)=>{ c.coinInterval*=0.85; } },
+      { key:'coins2', name:'Coin Value +', desc:'Coins worth more.', cost:[1,2], apply:(c)=>{ c.coinValue=[c.coinValue[0]+8, c.coinValue[1]+30]; } },
+      { key:'hazard1', name:'Hazard Smoothing', desc:'Fewer audits.', cost:[1,2], apply:(c)=>{ c.hazardInterval*=1.15; } },
+      { key:'hazard2', name:'Chaos Mode', desc:'Spicy audits.', cost:[1,3], apply:(c)=>{ c.hazardInterval*=0.85; } },
+      { key:'time', name:'Time Extension', desc:'+3s level time.', cost:[1,2], apply:(c)=>{ c.levelTime+=3; } },
+      { key:'magnet', name:'Magnetism', desc:'Bigger pickup radius.', cost:[2,3], apply:(c)=>{ c.playerR+=10; } },
+      { key:'penalty', name:'SOX Readiness', desc:'Lower audit penalty.', cost:[1,2], apply:(c)=>{ c.penalty=Math.max(0.1, c.penalty-0.05); } },
+      { key:'adsdk', name:'Ad SDK', desc:'Enable interstitials.', cost:[1,2], apply:(c)=>{ /* hook flag */ c.hasAdSDK=true; } },
+      { key:'reward', name:'Rewarded Flow', desc:'Unlock 2× bonus.', cost:[1,2], apply:(c)=>{ c.hasRewarded=true; } },
+      { key:'polish', name:'Polish Pass', desc:'+10% earnings.', cost:[1,2], apply:(c)=>{ c.earnBoost=(c.earnBoost||1)*1.1; } },
+    ];
+
+    function rngInt(r){ return Math.floor(world.rng()*r); }
+
+    function randomFeatures(){
+      const picks = new Set();
+      while (picks.size < 6){ picks.add( catalog[rngInt(catalog.length)].key ); }
+      world.features = Array.from(picks).map((key, i)=>{
+        const base = catalog.find(c=>c.key===key);
+        const cost = base.cost[0] + rngInt( (base.cost[1]-base.cost[0])+1 );
+        return { id:i, key: base.key, name: base.name, desc: base.desc, cost, selected:false };
+      });
+      world.selected.clear();
+      renderFeatureBoard();
+      updateOuterHUD();
+    }
+
+    function renderFeatureBoard(){
+      featureBoardG.replaceChildren();
+      const cols=3, rows=2; const startX=60, startY=180, cellW=280, cellH=200, gapX=30, gapY=26;
+      world.features.forEach((f, idx)=>{
+        const cx = idx%cols; const cy = Math.floor(idx/cols);
+        const x = startX + cx*(cellW+gapX); const y = startY + cy*(cellH+gapY);
+        const g = document.createElementNS('http://www.w3.org/2000/svg','g'); g.setAttribute('cursor','pointer');
+        const r = document.createElementNS('http://www.w3.org/2000/svg','rect');
+        r.setAttribute('x',x); r.setAttribute('y',y); r.setAttribute('width',cellW); r.setAttribute('height',cellH);
+        r.setAttribute('rx',14); r.setAttribute('fill','url(#cardGrad)'); r.setAttribute('stroke','#283a52');
+        const title = document.createElementNS('http://www.w3.org/2000/svg','text'); title.textContent = f.name; title.setAttribute('x', x+16); title.setAttribute('y', y+36); title.setAttribute('font-size','20'); title.setAttribute('font-weight','800'); title.setAttribute('fill','#cfe7ff');
+        const desc = document.createElementNS('http://www.w3.org/2000/svg','text'); desc.textContent = f.desc; desc.setAttribute('x', x+16); desc.setAttribute('y', y+66); desc.setAttribute('font-size','14'); desc.setAttribute('fill','#9fb2c9');
+        const costT = document.createElementNS('http://www.w3.org/2000/svg','text'); costT.textContent = `Cost: ${f.cost}`; costT.setAttribute('x', x+16); costT.setAttribute('y', y+92); costT.setAttribute('font-size','14'); costT.setAttribute('fill','#ffd54a');
+        const tag = document.createElementNS('http://www.w3.org/2000/svg','text'); tag.textContent = f.key.toUpperCase(); tag.setAttribute('x', x+cellW-12); tag.setAttribute('y', y+36); tag.setAttribute('font-size','12'); tag.setAttribute('fill','#7e92ad'); tag.setAttribute('text-anchor','end');
+        g.append(r, title, desc, costT, tag);
+
+        // selection overlay
+        const sel = document.createElementNS('http://www.w3.org/2000/svg','rect'); sel.setAttribute('x',x); sel.setAttribute('y',y); sel.setAttribute('width',cellW); sel.setAttribute('height',cellH); sel.setAttribute('rx',14); sel.setAttribute('fill','#2c7a5f'); sel.setAttribute('opacity', f.selected? '0.35':'0'); g.appendChild(sel);
+
+        g.addEventListener('pointerdown', ()=>{
+          toggleFeature(f);
+          sel.setAttribute('opacity', f.selected? '0.35':'0');
+        });
+        featureBoardG.appendChild(g);
+      });
+    }
+
+    function toggleFeature(f){
+      if (f.selected){ f.selected=false; world.selected.delete(f.key); world.capacity += f.cost; }
+      else {
+        if (world.capacity - f.cost < 0) { pulseHint('Not enough capacity'); return; }
+        f.selected=true; world.selected.add(f.key); world.capacity -= f.cost;
+      }
+      updateOuterHUD();
+    }
+
+    function updateOuterHUD(){
+      tMoney.textContent = 'Bank: ' + fmtMoney(world.money);
+      tSprint.textContent = 'Sprint ' + world.sprint;
+      tCapacity.textContent = `Capacity: ${world.capacity} pts`;
+    }
+
+    function pulseHint(txt){ tHint.textContent = txt; setTimeout(()=> tHint.textContent='Select features → Ship build → Play inner level', 900); }
+
+    // Panels helpers
+    function showMenu(){ world.state='MENU'; panelMask.classList.remove('hidden'); menuPanel.classList.remove('hidden'); betweenInner.classList.add('hidden'); betweenSprint.classList.add('hidden'); gameOverPanel.classList.add('hidden'); }
+    function hidePanels(){ panelMask.classList.add('hidden'); menuPanel.classList.add('hidden'); betweenInner.classList.add('hidden'); betweenSprint.classList.add('hidden'); gameOverPanel.classList.add('hidden'); }
+    function showBetweenInner(){ world.state='BETWEEN_INNER'; panelMask.classList.remove('hidden'); betweenInner.classList.remove('hidden'); }
+    function showBetweenSprint(){ world.state='BETWEEN_SPRINT'; panelMask.classList.remove('hidden'); betweenSprint.classList.remove('hidden'); }
+    function showOver(){ world.state='OVER'; panelMask.classList.remove('hidden'); gameOverPanel.classList.remove('hidden'); }
+
+    // Buttons
+    makeBtn(btnStart, ()=>{ hidePanels(); startOuter(); });
+    makeBtn(btnShip, ()=> shipBuild());
+    makeBtn(btnReroll, ()=> { world.capacity = 5 + Math.floor((world.sprint-1)/2); randomFeatures(); });
+    makeBtn(btnTestAd, ()=> openAdOverlay());
+
+    makeBtn(btnShowAd, ()=> openAdOverlay());
+    makeBtn(btn2x, ()=> { openAdOverlay(); window.onInterstitialClosed = ()=>{ world.money += world.lastEarned || 0; biBank.textContent = fmtMoney(world.money); window.onInterstitialClosed = null; }; });
+    makeBtn(btnBackDev, ()=> { hidePanels(); completeSprint(); });
+
+    makeBtn(btnNextSprint, ()=> { hidePanels(); nextSprint(); });
+    makeBtn(btnRestart, ()=> { hidePanels(); resetAll(); startOuter(); });
+
+    makeBtn(btnCloseAd, ()=> { closeAdOverlay(); if (typeof window.onInterstitialClosed === 'function'){ const cb = window.onInterstitialClosed; window.onInterstitialClosed = null; cb(); } });
+
+    function makeBtn(g, handler){ g.addEventListener('pointerdown', (e)=>{ e.preventDefault(); handler(); }); g.addEventListener('touchstart', (e)=>{ e.preventDefault(); handler(); }, {passive:false}); }
+
+    // Outer→Inner configuration
+    function buildInnerConfig(){
+      const c = JSON.parse(JSON.stringify(world.innerCfgBase));
+      world.features.forEach(f=>{ if (f.selected){ const cat = catalog.find(x=>x.key===f.key); if (cat && cat.apply) cat.apply(c); } });
+      // Minor scaling with sprint
+      c.coinValue = [c.coinValue[0]+world.sprint*3, c.coinValue[1]+world.sprint*6];
+      c.coinInterval *= (1 - Math.min(0.25, (world.sprint-1)*0.03));
+      c.hazardInterval *= (1 - Math.min(0.2, (world.sprint-1)*0.02));
+      world.innerCfg = c;
+      return c;
+    }
+
+    function startOuter(){
+      world.state='OUTER'; world.money=0; world.sprint=1; world.capacity=5; randomFeatures(); updateOuterHUD();
+      // draw inner player avatar
+      drawInnerPlayer(); drawInnerBackdrop();
+      resetInnerRuntime();
+    }
+
+    function resetAll(){ world.money=0; world.sprint=1; world.capacity=5; world.selected.clear(); world.features=[]; world.innerCfg=null; resetInnerRuntime(); }
+
+    // Ship build → enter inner game
+    function shipBuild(){
+      if (world.selected.size===0){ pulseHint('Select at least one feature'); return; }
+      buildInnerConfig();
+      startInnerLevel();
+    }
+
+    function startInnerLevel(){
+      world.state='INNER';
+      resetInnerRuntime();
+      const c = world.innerCfg;
+      world.inner.timeLeft = c.levelTime;
+      // spawn timers
+      world.inner.spawnCoinT = 0; world.inner.spawnHazardT = 0;
+    }
+
+    function resetInnerRuntime(){
+      // Clear entities
+      innerCoinsG.replaceChildren(); innerHazardsG.replaceChildren(); innerEffectsG.replaceChildren();
+      world.inner.coins.clear(); world.inner.hazards.clear();
+      world.inner.levelEarnings = 0; world.inner.coinId = 0; world.inner.hazardId = 0;
+      // Reset player position
+      const r = world.inner.rect; world.inner.px = r.x + r.w*0.5; world.inner.py = r.y + r.h*0.8; world.inner.inputX = world.inner.px; world.inner.inputY = world.inner.py; world.inner.pr = (world.innerCfg?.playerR) || world.inner.pr;
+      updateInnerHUD();
+    }
+
+    // Inner visuals
+    function drawInnerBackdrop(){
+      innerScene.replaceChildren();
+      const r = world.inner.rect;
+      const bg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      bg.setAttribute('x', r.x); bg.setAttribute('y', r.y); bg.setAttribute('width', r.w); bg.setAttribute('height', r.h); bg.setAttribute('fill', '#0e141b');
+      innerScene.appendChild(bg);
+      // simple skyline
+      for (let i=0;i<12;i++){
+        const bx = r.x + 20 + i*48; const bw = 30; const bh = 120 + (i%3)*30;
+        const b = document.createElementNS('http://www.w3.org/2000/svg','rect'); b.setAttribute('x', bx); b.setAttribute('y', r.y + r.h - bh); b.setAttribute('width', bw); b.setAttribute('height', bh); b.setAttribute('fill', '#0f1a24'); innerScene.appendChild(b);
+      }
+      // floor
+      const fl = document.createElementNS('http://www.w3.org/2000/svg','rect'); fl.setAttribute('x', r.x); fl.setAttribute('y', r.y + r.h - 16); fl.setAttribute('width', r.w); fl.setAttribute('height', 16); fl.setAttribute('fill', '#111b26'); innerScene.appendChild(fl);
+    }
+
+    function drawInnerPlayer(){
+      innerPlayerG.replaceChildren();
+      const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+      const body = document.createElementNS('http://www.w3.org/2000/svg','ellipse'); body.setAttribute('cx', world.inner.px); body.setAttribute('cy', world.inner.py); body.setAttribute('rx', 70*0.8); body.setAttribute('ry', 48*0.8); body.setAttribute('fill', '#ff86a6'); body.setAttribute('stroke', '#f06a90'); body.setAttribute('stroke-width', '3');
+      const slot = document.createElementNS('http://www.w3.org/2000/svg','rect'); slot.setAttribute('x', world.inner.px-18); slot.setAttribute('y', world.inner.py-24); slot.setAttribute('width', 36); slot.setAttribute('height', 6); slot.setAttribute('rx', 2); slot.setAttribute('fill', '#7b3b4f');
+      const eye1 = document.createElementNS('http://www.w3.org/2000/svg','circle'); eye1.setAttribute('cx', world.inner.px-22); eye1.setAttribute('cy', world.inner.py-12); eye1.setAttribute('r', 3.2); eye1.setAttribute('fill', '#2c0b1a');
+      const eye2 = document.createElementNS('http://www.w3.org/2000/svg','circle'); eye2.setAttribute('cx', world.inner.px+22); eye2.setAttribute('cy', world.inner.py-12); eye2.setAttribute('r', 3.2); eye2.setAttribute('fill', '#2c0b1a');
+      g.append(body, slot, eye1, eye2); innerPlayerG.appendChild(g);
+    }
+
+    // Entities
+    function spawnCoin(){
+      const id = ++world.inner.coinId;
+      const r = 10 + world.rng()*9;
+      const x = world.inner.rect.x + 20 + world.rng()*(world.inner.rect.w - 40);
+      const y = world.inner.rect.y - 10;
+      const vy = 140 + world.rng()*160;
+      const value = randRange(world.innerCfg.coinValue[0], world.innerCfg.coinValue[1]);
+      const g = document.createElementNS('http://www.w3.org/2000/svg','g'); g.setAttribute('data-id', id);
+      const glow = makeCircle(x, y, r*2.0, 'url(#coinGlow)', 0.35);
+      const c = makeCircle(x, y, r, '#ffd54a'); c.setAttribute('stroke', '#caa133'); c.setAttribute('stroke-width','3');
+      const tt = document.createElementNS('http://www.w3.org/2000/svg','text'); tt.textContent='$'; tt.setAttribute('x', x); tt.setAttribute('y', y+5); tt.setAttribute('text-anchor','middle'); tt.setAttribute('font-weight','900'); tt.setAttribute('fill','#5a430b'); tt.setAttribute('font-size', String(r+4));
+      g.append(glow, c, tt); innerCoinsG.appendChild(g);
+      world.inner.coins.set(id, {id,x,y,r,vy,value,g,alive:true});
+    }
+
+    function spawnHazard(){
+      const id = ++world.inner.hazardId;
+      const r = 14 + world.rng()*12; const x = world.inner.rect.x + 20 + world.rng()*(world.inner.rect.w - 40); const y = world.inner.rect.y - 20; const vy = 180 + world.rng()*200;
+      const g = document.createElementNS('http://www.w3.org/2000/svg','g'); g.setAttribute('data-id', id);
+      const poly = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+      const pts=[]; const cx=x, cy=y; const spikes=6; for(let i=0;i<spikes;i++){ const a=i/spikes*Math.PI*2; const rr = i%2? r*0.5 : r; pts.push((cx+Math.cos(a)*rr)+","+(cy+Math.sin(a)*rr)); }
+      poly.setAttribute('points', pts.join(' ')); poly.setAttribute('fill','#ff5a67'); poly.setAttribute('stroke','#cc2f3b'); poly.setAttribute('stroke-width','3');
+      g.appendChild(poly); innerHazardsG.appendChild(g);
+      world.inner.hazards.set(id, {id,x,y,r,vy,g,alive:true});
+    }
+
+    function updateCoin(e, dt){ e.y += e.vy*dt; const [glow,c,tt] = e.g.children; glow.setAttribute('cy', e.y); c.setAttribute('cy', e.y); tt.setAttribute('y', e.y+5);
+      // collision circle-ellipse approx use pr*0.75 as radius
+      const dx = e.x - world.inner.px; const dy = e.y - world.inner.py; if (dx*dx + dy*dy < (e.r + world.innerCfg.playerR*0.75)**2){ e.alive=false; e.g.remove(); world.inner.levelEarnings += e.value; spark(e.x, e.y); }
+      if (e.y - e.r > world.inner.rect.y + world.inner.rect.h){ e.alive=false; e.g.remove(); }
+    }
+
+    function updateHazard(h, dt){ h.y += h.vy*dt; h.g.setAttribute('transform', `translate(0 ${h.y-0})`); const dx = h.x - world.inner.px; const dy = h.y - world.inner.py; if (dx*dx + dy*dy < (h.r + world.innerCfg.playerR*0.68)**2){
+        h.alive=false; h.g.remove(); const loss = Math.round(world.inner.levelEarnings*world.innerCfg.penalty); world.inner.levelEarnings = Math.max(0, world.inner.levelEarnings - loss); flash(`${loss>0?'-$'+loss:'AUDIT!'}`);
+      }
+      if (h.y - h.r > world.inner.rect.y + world.inner.rect.h){ h.alive=false; h.g.remove(); }
+    }
+
+    function spark(x,y){ const s = makeCircle(x, y, 3, '#fff', 1); innerEffectsG.appendChild(s); let t=0; const life=0.35; (function anim(){ t+=1/60; if(t>=life){ s.remove(); return;} s.setAttribute('opacity', String(1-t/life)); s.setAttribute('cy', String(y - t/life*24)); requestAnimationFrame(anim); })(); }
+    function flash(text){ const tx = document.createElementNS('http://www.w3.org/2000/svg','text'); tx.textContent=text; tx.setAttribute('x', world.inner.px); tx.setAttribute('y', world.inner.py-60); tx.setAttribute('text-anchor','middle'); tx.setAttribute('font-size','22'); tx.setAttribute('fill','#ffb3ba'); tx.setAttribute('font-weight','900'); innerEffectsG.appendChild(tx); let t=0; const L=0.6; (function a(){ t+=1/60; if(t>=L){ tx.remove(); return;} tx.setAttribute('opacity', String(1-t/L)); tx.setAttribute('y', String(world.inner.py-60 - (t/L)*20)); requestAnimationFrame(a); })(); }
+    function makeCircle(cx,cy,r,fill,op){ const c = document.createElementNS('http://www.w3.org/2000/svg','circle'); c.setAttribute('cx',cx); c.setAttribute('cy',cy); c.setAttribute('r',r); c.setAttribute('fill',fill); if(op!=null) c.setAttribute('opacity',op); return c; }
+    function randRange(a,b){ return Math.floor(a + world.rng()*(b-a+1)); }
+
+    // Input mapping for inner frame
+    function toSVGPoint(clientX, clientY){ const pt = svg.createSVGPoint(); pt.x = clientX; pt.y = clientY; const m = svg.getScreenCTM().inverse(); return pt.matrixTransform(m); }
+    window.addEventListener('pointermove', (e)=>{
+      if (world.state !== 'INNER') return; const p = toSVGPoint(e.clientX, e.clientY); const r = world.inner.rect; const x = clamp(p.x, r.x+40, r.x + r.w - 40); const y = clamp(p.y, r.y+120, r.y + r.h - 28); world.inner.inputX = x; world.inner.inputY = y; });
+
+    // Loop
+    let last = performance.now();
+    function loop(now){ const dt = Math.min(0.033, (now - last)/1000); last = now; if (world.state==='INNER') stepInner(dt); requestAnimationFrame(loop); }
+    requestAnimationFrame(loop);
+
+    function stepInner(dt){
+      // Follow input
+      world.inner.px += (world.inner.inputX - world.inner.px) * 0.2; world.inner.py += (world.inner.inputY - world.inner.py) * 0.2;
+      innerPlayerG.setAttribute('transform', `translate(${world.inner.px-0} ${world.inner.py-0})`);
+
+      // Spawns
+      const c = world.innerCfg; world.inner.spawnCoinT += dt; world.inner.spawnHazardT += dt;
+      if (world.inner.spawnCoinT >= c.coinInterval){ spawnCoin(); world.inner.spawnCoinT = 0; }
+      if (world.inner.spawnHazardT >= c.hazardInterval){ spawnHazard(); world.inner.spawnHazardT = 0; }
+
+      // Update entities
+      world.inner.coins.forEach(e => e.alive && updateCoin(e, dt));
+      world.inner.hazards.forEach(h => h.alive && updateHazard(h, dt));
+
+      // Timer
+      world.inner.timeLeft -= dt; if (world.inner.timeLeft <= 0){ endInnerLevel(); return; }
+
+      updateInnerHUD();
+    }
+
+    function updateInnerHUD(){ innerMoneyText.textContent = fmtMoney(world.money + world.inner.levelEarnings); innerTimeText.textContent = world.inner.timeLeft.toFixed(1) + 's'; }
+
+    function endInnerLevel(){
+      // apply earnings + polish bonus
+      let earn = world.inner.levelEarnings * (world.innerCfg?.earnBoost || 1);
+      world.money += earn; world.lastEarned = earn;
+      biEarned.textContent = fmtMoney(earn); biBank.textContent = fmtMoney(world.money);
+      if (typeof window.onBetweenInner === 'function'){ window.onBetweenInner({ sprint: world.sprint, earned: earn, bank: world.money, features: Array.from(world.selected) }); }
+      showBetweenInner();
+    }
+
+    function completeSprint(){
+      bsSprint.textContent = world.sprint; bsBank.textContent = fmtMoney(world.money); if (typeof window.onBetweenSprint === 'function'){ window.onBetweenSprint({ sprint: world.sprint, bank: world.money }); }
+      showBetweenSprint();
+      // Win check
+      if (world.money >= world.target){ showOver(); }
+    }
+
+    function nextSprint(){ world.sprint += 1; world.capacity = 5 + Math.floor((world.sprint-1)/2); randomFeatures(); updateOuterHUD(); world.state='OUTER'; }
+
+    // Ad overlay
+    function openAdOverlay(){ adOverlay.classList.remove('hidden'); }
+    function closeAdOverlay(){ adOverlay.classList.add('hidden'); }
+    window.onBetweenInner = null; // (payload) => void
+    window.onBetweenSprint = null; // (payload) => void
+    window.onInterstitialClosed = null; // () => void
+
+    // Init
+    world.rngSeed = (Math.random()*1e9)|0; world.rng = makeRNG(world.rngSeed);
+    showMenu();
+
+  })();
+  </script>
+</body>
+</html>
